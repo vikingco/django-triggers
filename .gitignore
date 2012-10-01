@@ -1,0 +1,58 @@
+########
+# Python
+########
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+
+#Mr Developer
+.mr.developer.cfg
+
+# Django extras
+*.log
+*.pot
+
+# backup files
+*.bak
+.*.sw[a-z]
+*.un~
+*.po-backup*
+
+#########
+# Eclipse
+#########
+*.pydevproject
+.project
+.metadata
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.classpath
+.settings/
+.loadpath
+
+# CDT-specific
+.cproject
