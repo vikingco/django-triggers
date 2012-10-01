@@ -3,17 +3,16 @@ import datetime
 from django.db import models
 from django.db.models.base import ModelBase
 
-from mvne.telco.triggers.managers import TriggerManager
-from mvne.telco.triggers.exceptions import (AlreadyProcessedError,
-    ProcessLaterError,
-)
+from .managers import TriggerManager
+from .exceptions import AlreadyProcessedError, ProcessLaterError
 
-class TypedTriggerBase(ModelBase):
+class TriggerBase(ModelBase):
     """
-    A meta class for all TypedTriggers
+    A meta class for all Triggers. Adds a default manager that filters
+    on type.
     """
     def __new__(cls, name, bases, attrs):
-        super_new = super(TypedTriggerBase, cls).__new__
+        super_new = super(TriggerBase, cls).__new__
         typed = attrs.pop('typed', None)
         if not typed is None:
             attrs['objects'] = TriggerManager(typed)
@@ -24,23 +23,27 @@ class TypedTriggerBase(ModelBase):
         new_class.typed = typed
         return new_class
 
-class TypedTrigger(models.Model):
+class Trigger(models.Model):
     """
-    A TypedTrigger is a Trigger of a particular type.
+    A persistent Trigger that needs processing.
 
-    All classes using TypedTrigger should set the attribute `typed` to
-    a valid trigger type. It will then not have to worry about this
-    anymore.
+    Triggers are created when a certain state is reached internally
+    or externally. Triggers are persistent and need processing after
+    a certain point in time.
+
+    To create a trigger start by subclassing Trigger and setting the
+    'typed' attribute. 'typed' should be a unique slug that identifies
+    the trigger. Subclasses should alse implement '_process()'.
+
+    Subclasses can be proxy models when no extra data needs to be
+    stored. Otherwise use regular subclassing. This will create an
+    additional table with trigger specific data and a one-to-one
+    relation to the triggers table.
+
+    'source' is a free-form field that can be used to uniquely determine
+    the source of the trigger.
     """
-    __metaclass__ = TypedTriggerBase
-    class Meta:
-        # Setting abstract to false means this will generate multiple tables
-        # with one-to-one relations but that would have happened anyway. Each
-        # trigger needs its own trigger specific data.
-        # This also makes it possible to query triggers in bulk:
-        #   - How many processed?
-        #   - How many scheduled?
-        abstract = False
+    __metaclass__ = TriggerBase
 
     # Set typed in a subclass to make it a typed trigger.
     typed = None
@@ -52,7 +55,7 @@ class TypedTrigger(models.Model):
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
 
     def __init__(self, *args, **kwargs):
-        super(TypedTrigger, self).__init__(*args, **kwargs)
+        super(Trigger, self).__init__(*args, **kwargs)
         if hasattr(self, 'typed'):
             self.trigger_type = self.typed
 
