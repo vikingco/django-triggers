@@ -8,7 +8,7 @@ setup(
     url='https://github.com/citylive/django-triggers',
     license='BSD',
     description="Framework to create and process triggers.",
-    long_description=open('README.rst', 'r').read(),
+    long_description=open('README.md', 'r').read(),
     author='Olivier Sels, City Live nv',
     packages=find_packages(),
     package_data=dict(djtriggers=['']),
