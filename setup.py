@@ -5,7 +5,7 @@ import djtriggers
 setup(
     name="django-triggers",
     version=djtriggers.__version__,
-    url='https://github.com/citylive/djtriggers',
+    url='https://github.com/citylive/django-triggers',
     license='BSD',
     description="Framework to create and process triggers.",
     long_description=open('README.rst', 'r').read(),
