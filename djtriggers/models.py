@@ -49,7 +49,7 @@ class Trigger(models.Model):
     typed = None
 
     trigger_type = models.CharField(max_length=50, db_index=True)
-    source = models.CharField(max_length=250, null=True, blank=True, unique=True)
+    source = models.CharField(max_length=250, null=True, blank=True)
     date_received = models.DateTimeField()
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
@@ -66,7 +66,7 @@ class Trigger(models.Model):
     def get_source(self):
         return tuple(x for x in self.source.split('$') if x != '')
 
-    def process(self, force=False):
+    def process(self, force=False, dictionary={}):
         now = datetime.datetime.now()
         if not force and not self.date_processed is None:
             raise AlreadyProcessedError()
@@ -74,7 +74,7 @@ class Trigger(models.Model):
             raise ProcessLaterError(self.process_after)
 
         try:
-            self._process()
+            self._process(dictionary)
             self.date_processed = datetime.datetime.now()
         except ProcessLaterError as e:
             self.process_after = e.process_after
@@ -86,5 +86,5 @@ class Trigger(models.Model):
             self.date_processed = datetime.datetime.now()
         self.save()
 
-    def _process(self):
+    def _process(self, dictionary):
         raise NotImplementedError()
