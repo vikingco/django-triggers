@@ -80,8 +80,6 @@ class Trigger(models.Model):
             self.process_after = e.process_after
             self.save()
             raise
-        else:
-            self.process_after = None
         if self.date_processed is None:
             self.date_processed = datetime.datetime.now()
         self.save()
