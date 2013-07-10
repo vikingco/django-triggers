@@ -31,7 +31,7 @@ class BreakfastTrigger(Trigger):
         proxy = True
     typed = 'breakfast'
 
-    def _process(self):
+    def _process(self, dictionary={}):
         prepare_toast()
         prepare_juice()
         eat()
@@ -54,7 +54,7 @@ class PayBill(Trigger):
     amount = models.IntegerField()
     recipient = models.ForeignKey(User)
 
-    def _process(self):
+    def _process(self, dictionary={}):
         amount = self.amount
         recipient = self.recipient
         check_balance()
