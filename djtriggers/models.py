@@ -76,7 +76,6 @@ class Trigger(models.Model):
 
         try:
             self._process(dictionary)
-            self.date_processed = now
         except ProcessLaterError as e:
             self.process_after = e.process_after
             self.save()
