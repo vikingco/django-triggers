@@ -76,13 +76,13 @@ class Trigger(models.Model):
 
         try:
             self._process(dictionary)
-            self.date_processed = timezone.now()
+            self.date_processed = now
         except ProcessLaterError as e:
             self.process_after = e.process_after
             self.save()
             raise
         if self.date_processed is None:
-            self.date_processed = timezone.now()
+            self.date_processed = now
         self.save()
 
     def _process(self, dictionary):
