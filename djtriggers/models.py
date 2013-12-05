@@ -5,6 +5,8 @@ from django.db.models.base import ModelBase
 
 from .managers import TriggerManager
 from .exceptions import AlreadyProcessedError, ProcessLaterError
+from .loggers import get_logger
+from .loggers.base import TriggerLogger
 
 class TriggerBase(ModelBase):
     """
@@ -42,6 +44,10 @@ class Trigger(models.Model):
 
     'source' is a free-form field that can be used to uniquely determine
     the source of the trigger.
+
+    There is a logging framework included. If passed a logger argument in the
+    __init__, that logger will be used, otherwise the class' _logger_class
+    determines the logger (if any). Default is no logging.
     """
     __metaclass__ = TriggerBase
 
@@ -54,10 +60,17 @@ class Trigger(models.Model):
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
 
+    _logger_class = None
+
     def __init__(self, *args, **kwargs):
         super(Trigger, self).__init__(*args, **kwargs)
         if hasattr(self, 'typed'):
             self.trigger_type = self.typed
+
+        if self._logger_class:
+            self.logger = get_logger(self._logger_class)
+        else:
+            self.logger = TriggerLogger()
 
     def set_source(self, *args):
         args = [str(arg) for arg in args]
@@ -66,7 +79,9 @@ class Trigger(models.Model):
     def get_source(self):
         return tuple(x for x in self.source.split('$') if x != '')
 
-    def process(self, force=False, dictionary={}):
+    def process(self, force=False, logger=None, dictionary={}):
+        if logger:
+            self.logger = get_logger(logger)
         now = datetime.datetime.now()
         if not force and not self.date_processed is None:
             raise AlreadyProcessedError()
@@ -74,7 +89,7 @@ class Trigger(models.Model):
             raise ProcessLaterError(self.process_after)
 
         try:
-            self._process(dictionary)
+            self.logger.log_result(self, self._process(dictionary))
             self.date_processed = datetime.datetime.now()
         except ProcessLaterError as e:
             self.process_after = e.process_after
@@ -86,3 +101,8 @@ class Trigger(models.Model):
 
     def _process(self, dictionary):
         raise NotImplementedError()
+
+
+class TriggerResult(models.Model):
+    trigger = models.ForeignKey(Trigger)
+    result = models.TextField()
