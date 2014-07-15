@@ -1,12 +1,12 @@
-import datetime
-
 from django.db import models
 from django.db.models.base import ModelBase
+from django.utils import timezone
 
 from .managers import TriggerManager
 from .exceptions import AlreadyProcessedError, ProcessLaterError
 from .loggers import get_logger
 from .loggers.base import TriggerLogger
+
 
 class TriggerBase(ModelBase):
     """
@@ -24,6 +24,7 @@ class TriggerBase(ModelBase):
 
         new_class.typed = typed
         return new_class
+
 
 class Trigger(models.Model):
     """
@@ -82,7 +83,7 @@ class Trigger(models.Model):
     def process(self, force=False, logger=None, dictionary={}):
         if logger:
             self.logger = get_logger(logger)
-        now = datetime.datetime.now()
+        now = timezone.now()
         if not force and not self.date_processed is None:
             raise AlreadyProcessedError()
         if not force and self.process_after and self.process_after >= now:
@@ -90,13 +91,12 @@ class Trigger(models.Model):
 
         try:
             self.logger.log_result(self, self._process(dictionary))
-            self.date_processed = datetime.datetime.now()
         except ProcessLaterError as e:
             self.process_after = e.process_after
             self.save()
             raise
         if self.date_processed is None:
-            self.date_processed = datetime.datetime.now()
+            self.date_processed = now
         self.save()
 
     def _process(self, dictionary):
