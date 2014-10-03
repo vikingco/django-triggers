@@ -6,6 +6,7 @@ The command takes a FileLock when running, to prevent triggers being processed m
 
 import datetime
 from lockfile import FileLock, AlreadyLocked, LockTimeout
+import inspect
 from optparse import make_option
 
 from django.core.management.base import NoArgsCommand
@@ -47,7 +48,8 @@ class Command(NoArgsCommand):
             # Get all database models
             for trigger_model in get_models():
                 # Check whether it's a trigger
-                if not issubclass(trigger_model, Trigger) or getattr(trigger_model, 'typed', None) is None:
+                if not issubclass(trigger_model, Trigger) or getattr(trigger_model, 'typed', None) is None or \
+                        inspect.isabstract(trigger_model):
                     continue
 
                 # Get all triggers of this type that need to be processed
