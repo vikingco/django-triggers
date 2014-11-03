@@ -102,6 +102,9 @@ class Trigger(models.Model):
     def _process(self, dictionary):
         raise NotImplementedError()
 
+    def __repr__(self):
+        return 'Trigger %s of type %s (%sprocessed)' % (self.id, self.trigger_type, '' if self.date_processed else 'not ')
+
 
 class TriggerResult(models.Model):
     trigger = models.ForeignKey(Trigger)
