@@ -13,12 +13,12 @@ class TriggerBase(ModelBase):
     A meta class for all Triggers. Adds a default manager that filters
     on type.
     """
-    def __new__(cls, name, bases, attrs):
-        super_new = super(TriggerBase, cls).__new__
+    def __new__(mcs, name, bases, attrs):
+        super_new = super(TriggerBase, mcs).__new__
         typed = attrs.pop('typed', None)
         if not typed is None:
             attrs['objects'] = TriggerManager(typed)
-        new_class = super_new(cls, name, bases, attrs)
+        new_class = super_new(mcs, name, bases, attrs)
         if typed is None:
             return new_class
 
@@ -106,3 +106,6 @@ class Trigger(models.Model):
 class TriggerResult(models.Model):
     trigger = models.ForeignKey(Trigger)
     result = models.TextField()
+
+    def __repr__(self):
+        return self.result
