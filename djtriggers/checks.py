@@ -12,9 +12,18 @@ def run_checks(checks):
     :rtype: tuple of (bool, dict)
     """
     results = {}
+    all_succeeded = True
     for check, kwargs in checks:
-        results[check.__name__] = check(**kwargs).succeeded
-    return (all(results.values()), results)
+        succeeded = check(**kwargs).succeeded
+        if isinstance(succeeded, bool):
+            if not succeeded:
+                all_succeeded = False
+            results[check.__name__] = succeeded
+        elif isinstance(succeeded, tuple):
+            if not succeeded[0]:
+                all_succeeded = False
+            results[check.__name__] = succeeded
+    return (all_succeeded, results)
 
 
 class Check(object):
