@@ -5,13 +5,13 @@ class TriggerManager(models.Manager):
         super(TriggerManager, self).__init__()
         self.trigger_type = trigger_type
 
-    def get_query_set(self):
-        qs = super(TriggerManager, self).get_query_set()
+    def get_queryset(self):
+        qs = super(TriggerManager, self).get_queryset()
         if self.trigger_type:
             qs = qs.filter(trigger_type=self.trigger_type)
         return qs
 
     def get_unprocessed_triggers(self):
-        qs = self.get_query_set()
+        qs = self.get_queryset()
         return qs.filter(date_processed__isnull=True)
 
