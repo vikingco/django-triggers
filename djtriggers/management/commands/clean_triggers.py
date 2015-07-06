@@ -42,7 +42,9 @@ class Command(NoArgsCommand):
         # Delete each trigger
         for trigger in to_be_deleted:
             # Delete the specific trigger information
-            table = settings.DJTRIGGERS_TYPE_TO_TABLE[trigger.trigger_type]
+            table = getattr(settings.DJTRIGGERS_TYPE_TO_TABLE, trigger.trigger_type, None)
+            if table is None:
+                continue
             if isinstance(table, tuple):
                 for t in table:
                     if isinstance(t, tuple):
