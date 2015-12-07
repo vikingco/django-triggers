@@ -43,15 +43,13 @@ class Command(NoArgsCommand):
         for trigger in to_be_deleted:
             # Delete the specific trigger information
             table = getattr(settings.DJTRIGGERS_TYPE_TO_TABLE, trigger.trigger_type, None)
-            if table is None:
-                continue
             if isinstance(table, tuple):
                 for t in table:
                     if isinstance(t, tuple):
                         cursor.execute('DELETE FROM %s WHERE %s = %s' % (t[0], t[1], trigger.id))
                     else:
                         cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = %s' % (t, trigger.id))
-            else:
+            elif table:
                 cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = %s' % (table, trigger.id))
 
             # Delete the trigger from the main table
