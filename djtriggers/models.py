@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import timezone
@@ -57,7 +59,7 @@ class Trigger(models.Model):
 
     trigger_type = models.CharField(max_length=50, db_index=True)
     source = models.CharField(max_length=250, null=True, blank=True)
-    date_received = models.DateTimeField()
+    date_received = models.DateTimeField(default=datetime.now)
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
 
