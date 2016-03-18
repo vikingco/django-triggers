@@ -11,7 +11,6 @@ setup(
     long_description=open('README.md', 'r').read(),
     author='Olivier Sels, City Live nv',
     packages=find_packages(),
-    package_data=dict(djtriggers=['']),
     zip_safe=False, # Don't create egg files, Django cannot find templates in egg files.
     include_package_data=True,
     classifiers=[
