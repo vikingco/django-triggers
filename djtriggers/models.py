@@ -15,12 +15,12 @@ class TriggerBase(ModelBase):
     A meta class for all Triggers. Adds a default manager that filters
     on type.
     """
-    def __new__(mcs, name, bases, attrs):
-        super_new = super(TriggerBase, mcs).__new__
+    def __new__(cls, name, bases, attrs):
+        super_new = super(TriggerBase, cls).__new__
         typed = attrs.pop('typed', None)
-        if not typed is None:
+        if typed is not None:
             attrs['objects'] = TriggerManager(typed)
-        new_class = super_new(mcs, name, bases, attrs)
+        new_class = super_new(cls, name, bases, attrs)
         if typed is None:
             return new_class
 
@@ -86,7 +86,7 @@ class Trigger(models.Model):
         if logger:
             self.logger = get_logger(logger)
         now = timezone.now()
-        if not force and not self.date_processed is None:
+        if not force and self.date_processed is not None:
             raise AlreadyProcessedError()
         if not force and self.process_after and self.process_after >= now:
             raise ProcessLaterError(self.process_after)
@@ -105,7 +105,8 @@ class Trigger(models.Model):
         raise NotImplementedError()
 
     def __repr__(self):
-        return 'Trigger %s of type %s (%sprocessed)' % (self.id, self.trigger_type, '' if self.date_processed else 'not ')
+        return 'Trigger %s of type %s (%sprocessed)' % (self.id, self.trigger_type,
+                                                        '' if self.date_processed else 'not ')
 
 
 class TriggerResult(models.Model):
