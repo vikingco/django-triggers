@@ -58,7 +58,7 @@ class Trigger(models.Model):
     typed = None
 
     trigger_type = models.CharField(max_length=50, db_index=True)
-    source = models.CharField(max_length=250, null=True, blank=True)
+    source = models.CharField(max_length=250, null=True, blank=True, db_index=True)
     date_received = models.DateTimeField(default=datetime.now)
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
