@@ -8,7 +8,7 @@ from lockfile import FileLock, AlreadyLocked, LockTimeout
 
 from django.db import connections
 from django.db.models import Q
-from django.db.models.loading import get_models
+from django.apps import apps
 from django.conf import settings
 
 from djtriggers.models import Trigger
@@ -41,7 +41,7 @@ def process_triggers(use_statsd=False):
 
     try:
         # Get all database models
-        for trigger_model in get_models():
+        for trigger_model in apps.get_models():
             # Check whether it's a trigger
             if (not issubclass(trigger_model, Trigger) or
                getattr(trigger_model, 'typed', None) is None or
