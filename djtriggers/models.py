@@ -38,7 +38,7 @@ class Trigger(models.Model):
 
     To create a trigger start by subclassing Trigger and setting the
     'typed' attribute. 'typed' should be a unique slug that identifies
-    the trigger. Subclasses should alse implement '_process()'.
+    the trigger. Subclasses should also implement '_process()'.
 
     Subclasses can be proxy models when no extra data needs to be
     stored. Otherwise use regular subclassing. This will create an
@@ -105,8 +105,8 @@ class Trigger(models.Model):
         raise NotImplementedError()
 
     def __repr__(self):
-        return 'Trigger %s of type %s (%sprocessed)' % (self.id, self.trigger_type,
-                                                        '' if self.date_processed else 'not ')
+        return 'Trigger {trigger_id} of type {trigger_type} ({is_processed}processed)'.format(
+            trigger_id=self.id, trigger_type=self.trigger_type, is_processed='' if self.date_processed else 'not ')
 
 
 class TriggerResult(models.Model):

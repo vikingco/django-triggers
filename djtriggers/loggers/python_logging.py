@@ -2,6 +2,7 @@ from djtriggers.loggers.base import TriggerLogger
 
 import logging
 
+
 class PythonLogger(TriggerLogger):
     """
     Logger using the default python logger.
