@@ -1,31 +1,17 @@
-from datetime import datetime
+from logging import WARNING
 
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models.base import ModelBase
 from django.utils import timezone
+from django.conf import settings
+
+from locking.exceptions import AlreadyLocked
+from locking.models import NonBlockingLock
 
 from .managers import TriggerManager
 from .exceptions import AlreadyProcessedError, ProcessLaterError
 from .loggers import get_logger
 from .loggers.base import TriggerLogger
-
-
-class TriggerBase(ModelBase):
-    """
-    A meta class for all Triggers. Adds a default manager that filters
-    on type.
-    """
-    def __new__(cls, name, bases, attrs):
-        super_new = super(TriggerBase, cls).__new__
-        typed = attrs.pop('typed', None)
-        if typed is not None:
-            attrs['objects'] = TriggerManager(typed)
-        new_class = super_new(cls, name, bases, attrs)
-        if typed is None:
-            return new_class
-
-        new_class.typed = typed
-        return new_class
 
 
 class Trigger(models.Model):
@@ -52,16 +38,18 @@ class Trigger(models.Model):
     __init__, that logger will be used, otherwise the class' _logger_class
     determines the logger (if any). Default is no logging.
     """
-    __metaclass__ = TriggerBase
+    objects = TriggerManager()
 
     # Set typed in a subclass to make it a typed trigger.
     typed = None
 
     trigger_type = models.CharField(max_length=50, db_index=True)
+    content_type = models.ForeignKey(ContentType, editable=False, null=True)
     source = models.CharField(max_length=250, null=True, blank=True, db_index=True)
-    date_received = models.DateTimeField(default=datetime.now)
+    date_received = models.DateTimeField(default=timezone.now)
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
+    number_of_tries = models.IntegerField(default=0)
 
     _logger_class = None
 
@@ -75,6 +63,21 @@ class Trigger(models.Model):
         else:
             self.logger = TriggerLogger()
 
+    def save(self, *args, **kwargs):
+        # Save the content type of this object, so we can retrieve it later when querying Trigger
+        if not self.content_type:
+            self.content_type = ContentType.objects.get_for_model(self.__class__, for_concrete_model=False)
+        super(Trigger, self).save(*args, **kwargs)
+
+    def as_leaf_class(self):
+        """
+        Return this object as an instance of the Trigger subclass it was created as
+        """
+        model = self.content_type.model_class()
+        if model == Trigger:
+            return self
+        return model.objects.get(id=self.id, no_leaf_class=True)
+
     def set_source(self, *args):
         args = [str(arg) for arg in args]
         self.source = '$'.join(args)
@@ -82,31 +85,92 @@ class Trigger(models.Model):
     def get_source(self):
         return tuple(x for x in self.source.split('$') if x != '')
 
-    def process(self, force=False, logger=None, dictionary={}):
-        if logger:
-            self.logger = get_logger(logger)
-        now = timezone.now()
-        if not force and self.date_processed is not None:
-            raise AlreadyProcessedError()
-        if not force and self.process_after and self.process_after >= now:
-            raise ProcessLaterError(self.process_after)
+    def process(self, force=False, logger=None, dictionary=None, use_statsd=False):
+        """
+        Executes the Trigger
+        :param bool force: force the execution
+        :param string logger: slug of preferred logger
+        :param dict dictionary: dictionary needed by trigger to execute
+        :param bool use_statsd: whether to use statsd
+        :return: None
+        """
+        if dictionary is None:
+            dictionary = {}
 
+        # The task gets locked because multiple tasks in the queue can process the same trigger.
+        # The lock assures no two tasks can process a trigger simultaneously.
+        # The check for date_processed assures a trigger is not executed multiple times.
         try:
-            self.logger.log_result(self, self._process(dictionary))
-        except ProcessLaterError as e:
-            self.process_after = e.process_after
-            self.save()
-            raise
-        if self.date_processed is None:
-            self.date_processed = now
-        self.save()
+            with NonBlockingLock.objects.acquire_lock(self):
+                if logger:
+                    self.logger = get_logger(logger)
+                now = timezone.now()
+                if not force and self.date_processed is not None:
+                    raise AlreadyProcessedError()
+                if not force and self.process_after and self.process_after >= now:
+                    raise ProcessLaterError(self.process_after)
+
+                try:
+                    # execute trigger
+                    self.logger.log_result(self, self._process(dictionary))
+                    self._handle_execution_success(use_statsd)
+                except ProcessLaterError as e:
+                    self.process_after = e.process_after
+                    self.save()
+                    raise
+                except Exception as e:
+                    self._handle_execution_failure(e, use_statsd)
+                    raise
+        except AlreadyLocked:
+            pass
 
     def _process(self, dictionary):
         raise NotImplementedError()
 
+    def _handle_execution_failure(self, exception, use_statsd=False):
+        """
+        Handle execution failure of the trigger
+        :param Exception exception: the exception raised during failure
+        :param bool use_statsd: whether to use statsd
+        :return: None
+        """
+        self.number_of_tries += 1
+        if self.number_of_tries > getattr(settings, 'DJTRIGGERS_TRIES_BEFORE_WARNING', 3):
+            message = 'Processing of {trigger_type} {trigger_key} raised a {exception_type} (try nr. {try_count})'.\
+                format(trigger_type=self.trigger_type, trigger_key=self.pk, exception_type=type(exception).__name__,
+                       try_count=self.number_of_tries)
+            self.logger.log_message(self, message, level=WARNING)
+
+        # Send stats to statsd if necessary
+        if use_statsd:
+            from django_statsd.clients import statsd
+            statsd.incr('triggers.{trigger_type}.failed'.format(trigger_type=self.trigger_type))
+
+        self.save()
+
+    def _handle_execution_success(self, use_statsd=False):
+        """
+        Handle execution success of the trigger
+        :param bool use_statsd: whether to use statsd
+        :return: None
+        """
+        if self.date_processed is None:
+            now = timezone.now()
+            self.date_processed = now
+
+        # Send stats to statsd if necessary
+        if use_statsd:
+            from django_statsd.clients import statsd
+            statsd.incr('triggers.{trigger_type}.processed'.format(trigger_type=self.trigger_type))
+            if self.date_processed and self.process_after:
+                statsd.timing('triggers.{trigger_type}.process_delay_seconds'.format(trigger_type=self.trigger_type),
+                              (self.date_processed - self.process_after).total_seconds())
+
+        self.save()
+
     def __repr__(self):
-        return 'Trigger {trigger_id} of type {trigger_type} ({is_processed}processed)'.format(
-            trigger_id=self.id, trigger_type=self.trigger_type, is_processed='' if self.date_processed else 'not ')
+        return 'Trigger {trigger_id} of type {content_type} ({is_processed}processed)'.format(
+            trigger_id=self.id, content_type=self.content_type, is_processed='' if self.date_processed else 'not ')
 
 
 class TriggerResult(models.Model):
