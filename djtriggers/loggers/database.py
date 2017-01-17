@@ -1,10 +1,18 @@
+from logging import log, info
+
 from djtriggers.loggers.base import TriggerLogger
 
 
 class DatabaseLogger(TriggerLogger):
-    def log_result(self, trigger, message):
+    def log_result(self, trigger, message, level=None):
         from djtriggers.models import TriggerResult
         TriggerResult.objects.create(trigger=trigger, result=message)
+
+    def log_message(self, trigger, message, level=None):
+        if level:
+            log(level, message)
+        else:
+            info(message)
 
 
 def _prettify(results):
@@ -15,7 +23,7 @@ def _prettify(results):
 
 
 class DatabaseSerializeLogger(DatabaseLogger):
-    def log_result(self, trigger, results):
+    def log_result(self, trigger, results, level=None):
         if results is None:
             return
 
