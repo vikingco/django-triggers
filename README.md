@@ -1,3 +1,4 @@
+[![Coverage Status](https://coveralls.io/repos/github/vikingco/django-triggers/badge.svg)](https://coveralls.io/github/vikingco/django-triggers)
 About
 -----
 
