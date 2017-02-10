@@ -1,0 +1,39 @@
+# py.test to run the test suite
+pytest==2.8.3
+pytest-django==2.9.1
+pytest-cov==2.2.0
+
+# Mocking, faking, factories and other test helpers
+mock==1.0.1
+django-factory_boy==1.0.0
+factory_boy==2.7.0
+fake-factory==0.5.7
+
+# Flake8 checks for PEP-8 formatting and code quality
+flake8==2.5.2
+pyflakes==0.9.2
+pep8==1.6.2
+# Checks for cyclomatic complexity
+mccabe==0.3.1
+# Checks for naming conventions
+pep8-naming==0.3.3
+# Checks for the use of print statements
+flake8-print==1.6.1
+# Checks for the use of debug statements (pdb, ...)
+flake8-debugger==1.4.0
+# Checks for the overriding of builtins
+-e git+ssh://git@github.com/vikingco/flake8-builtins.git@1.0#egg=flake8-builtins
+# Checks for uses of Django-style asserts
+-e git+ssh://git@github.com/vikingco/flake8-pytest.git@1.1#egg=flake8-pytest
+# Checks for bad imports of fake_time (should come from libfaketime_tz_wrapper instead of libfaketime)
+-e git+ssh://git@github.com/vikingco/flake8-libfaketime.git@1.0#egg=flake8-libfaketime
+
+# Coverage uploads
+coveralls
+coverage==3.7.1
+docopt==0.6.2
+requests==2.9.1
+
+# StatsD allows us to push monitoring data to a Graphite server
+git+ssh://git@github.com/vikingco/django-statsd.git@0.4.0#egg=django-statsd-mozilla
+statsd==2.1.2

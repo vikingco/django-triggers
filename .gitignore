@@ -4,7 +4,9 @@
 *.py[co]
 
 # Packages
+.cache
 *.egg
+*.eggs
 *.egg-info
 dist
 build
@@ -56,3 +58,9 @@ local.properties
 
 # CDT-specific
 .cproject
+
+#########
+# PyCharm
+#########
+
+.idea/

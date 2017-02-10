@@ -11,5 +11,6 @@ for entry in loggers:
     instance = logger_class()
     REGISTRY[class_name] = instance
 
+
 def get_logger(slug):
     return REGISTRY.get(slug, None)

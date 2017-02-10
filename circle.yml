@@ -1,0 +1,16 @@
+machine:
+    python:
+        version: 2.7.12
+
+dependencies:
+    override:
+        - pip install -U pip setuptools
+        - pip install --no-deps -U -r requirements.txt
+        - pip install --no-deps -U -r requirements_test.txt
+        - python setup.py develop -N
+
+test:
+    override:
+        - flake8
+        - python setup.py pytest
+        - coveralls

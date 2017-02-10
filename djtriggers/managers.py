@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class TriggerManager(models.Manager):
     def __init__(self, trigger_type):
         super(TriggerManager, self).__init__()
@@ -14,4 +15,3 @@ class TriggerManager(models.Manager):
     def get_unprocessed_triggers(self):
         qs = self.get_queryset()
         return qs.filter(date_processed__isnull=True)
-

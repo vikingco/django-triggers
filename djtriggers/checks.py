@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def run_checks(checks):
     """
     Run a number of checks.
@@ -28,7 +29,6 @@ def run_checks(checks):
 
 class Check(object):
     def run(self):
-        logger.debug('Running check: %s' % self.__class__.__name__)
         self._result = self._run()
         return self._result
 
