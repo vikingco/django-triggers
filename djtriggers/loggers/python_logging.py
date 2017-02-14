@@ -1,6 +1,6 @@
 from djtriggers.loggers.base import TriggerLogger
 
-import logging
+from logging import log, info
 
 
 class PythonLogger(TriggerLogger):
@@ -9,12 +9,12 @@ class PythonLogger(TriggerLogger):
     """
     def log_result(self, trigger, message, level=None):
         if level:
-            logging.log(level, message)
+            log(level, message)
         else:
-            logging.info(message)
+            info(message)
 
     def log_message(self, trigger, message, level=None):
         if level:
-            logging.log(level, message)
+            log(level, message)
         else:
-            logging.info(message)
+            info(message)

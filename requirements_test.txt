@@ -27,6 +27,8 @@ flake8-debugger==1.4.0
 -e git+ssh://git@github.com/vikingco/flake8-pytest.git@1.1#egg=flake8-pytest
 # Checks for bad imports of fake_time (should come from libfaketime_tz_wrapper instead of libfaketime)
 -e git+ssh://git@github.com/vikingco/flake8-libfaketime.git@1.0#egg=flake8-libfaketime
+# Checks for module-level imports
+git+ssh://git@github.com/vikingco/flake8-module-import.git@1.0#egg=flake8-module-imports
 
 # Coverage uploads
 coveralls

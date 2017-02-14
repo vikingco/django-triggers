@@ -1,6 +1,6 @@
-import logging
+from logging import getLogger
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def run_checks(checks):

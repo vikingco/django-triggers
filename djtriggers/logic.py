@@ -1,5 +1,5 @@
-import inspect
-import logging
+from inspect import isabstract
+from logging import getLogger
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -15,7 +15,7 @@ from djtriggers.models import Trigger
 from djtriggers.exceptions import ProcessError, ProcessLaterError
 
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def process_triggers(use_statsd=False):
@@ -45,7 +45,7 @@ def process_triggers(use_statsd=False):
             # Check whether it's a trigger
             if (not issubclass(trigger_model, Trigger) or
                getattr(trigger_model, 'typed', None) is None or
-               inspect.isabstract(trigger_model)):
+               isabstract(trigger_model)):
                 continue
 
             # Get all triggers of this type that need to be processed

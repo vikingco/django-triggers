@@ -1,11 +1,11 @@
-import logging
+from logging import getLogger
 
 from django.core.management.base import NoArgsCommand
 
 from djtriggers.logic import clean_triggers
 
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 class Command(NoArgsCommand):
