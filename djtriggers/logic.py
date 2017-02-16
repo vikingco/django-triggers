@@ -1,18 +1,17 @@
 from inspect import isabstract
 from logging import getLogger
 
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from locking.models import NonBlockingLock
-
-from django.db import connections
-from django.db.models import Q
 from django.apps import apps
 from django.conf import settings
+from django.db import connections
+from django.db.models import Q
+from django.utils import timezone
 
-from djtriggers.models import Trigger
-from djtriggers.exceptions import ProcessError, ProcessLaterError
+from .models import Trigger
+from .exceptions import ProcessError, ProcessLaterError
+from .tasks import process_trigger
 
 
 logger = getLogger(__name__)
@@ -22,66 +21,45 @@ def process_triggers(use_statsd=False, function_logger=None):
     """
     Process all triggers that are ready for processing.
 
-    This function takes a Database Lock when running, to prevent
-    triggers being processed multiple times.
+    :param bool use_statsd: whether to use_statsd
+    :return: None
     """
-    # Override logger with function_logger (celery wants a different logger)
-    if not function_logger:
-        function_logger = logger
+    process_async = getattr(settings, 'DJTRIGGERS_ASYNC_HANDLING', False)
 
-    # Take a lock to prevent multiple processing threads
-    with NonBlockingLock.objects.acquire_lock(lock_name='djtriggers-process-triggers'):
-        # Get statsd if necessary
-        if use_statsd:
-            from django_statsd.clients import statsd
+    # Get all triggers that need to be processed
+    for model in apps.get_models():
+        # Check whether it's a trigger
+        if not issubclass(model, Trigger) or getattr(model, 'typed', None) is None or isabstract(model):
+            continue
 
-        now = datetime.now()
-        function_logger.info('Processing all triggers from {}'.format(now))
+        # Get all triggers of this type that need to be processed
+        triggers = model.objects.filter(Q(process_after__isnull=True) | Q(process_after__lt=timezone.now()),
+                                        date_processed__isnull=True)
 
-        # Get all database models
-        for trigger_model in apps.get_models():
-            # Check whether it's a trigger
-            if (not issubclass(trigger_model, Trigger) or
-               getattr(trigger_model, 'typed', None) is None or
-               isabstract(trigger_model)):
-                continue
-
-            # Get all triggers of this type that need to be processed
-            triggers = trigger_model.objects.filter(Q(process_after__isnull=True) |
-                                                    Q(process_after__lt=now),
-                                                    date_processed__isnull=True)
-
-            function_logger.info('Start processing %d triggers of type %s', triggers.count(), trigger_model.typed)
-            count_done, count_error, count_exception = 0, 0, 0
-
-            # Process each trigger
-            for trigger in triggers:
-                try:
+        # Process each trigger
+        for trigger in triggers:
+            try:
+                # Process the trigger, either synchronously or in a Celery task
+                if process_async:
+                    process_trigger.apply_async((trigger.id, trigger._meta.app_label, trigger.__class__.__name__),
+                                                {'use_statsd': use_statsd},
+                                                max_retries=getattr(settings, 'DJTRIGGERS_CELERY_TASK_MAX_RETRIES', 0))
+                else:
                     trigger.process()
 
-                    # Send stats to statsd if necessary
-                    if use_statsd:
-                        statsd.incr('triggers.{}.processed'.format(trigger.trigger_type))
-                        if trigger.date_processed and trigger.process_after:
-                            statsd.timing('triggers.{}.process_delay_seconds'.format(trigger.trigger_type),
-                                          (trigger.date_processed - trigger.process_after).total_seconds())
-                # The trigger didn't need processing yet
-                except ProcessLaterError:
-                    pass
-                # The trigger raised an (expected) error while processing
-                except ProcessError:
-                    count_error += 1
-                # A general exception occurred
-                except Exception, e:
-                    count_exception += 1
-                    message = 'Processing of %s %s raised a %s'
-                    function_logger.exception(message, trigger_model.typed, trigger.pk, type(e).__name__)
-                # The trigger was successfully processed
-                else:
-                    count_done += 1
-
-            function_logger.info('success: {}, error: {}, exception: {}'.format(count_done,
-                                                                                count_error, count_exception))
+                # Send stats to statsd if necessary
+                if use_statsd:
+                    from django_statsd.clients import statsd
+                    statsd.incr('triggers.{}.processed'.format(trigger.trigger_type))
+                    if trigger.date_processed and trigger.process_after:
+                        statsd.timing('triggers.{}.process_delay_seconds'.format(trigger.trigger_type),
+                                      (trigger.date_processed - trigger.process_after).total_seconds())
+            # The trigger didn't need processing yet
+            except ProcessLaterError:
+                pass
+            # The trigger raised an (expected) error while processing
+            except ProcessError:
+                pass
 
 
 def clean_triggers(expiration_dt=None, type_to_table=None):
@@ -113,7 +91,7 @@ def clean_triggers(expiration_dt=None, type_to_table=None):
     }
     """
     if expiration_dt is None:
-        expiration_dt = datetime.now() - relativedelta(months=2)
+        expiration_dt = timezone.now() - relativedelta(months=2)
 
     if type_to_table is None:
         type_to_table = getattr(settings, 'DJTRIGGERS_TYPE_TO_TABLE', {})
@@ -122,20 +100,17 @@ def clean_triggers(expiration_dt=None, type_to_table=None):
     sentinel = object()
     nr_deleted = 0
 
-    # Get triggers to be deleted
-    to_delete = Trigger.objects.filter(date_processed__lt=expiration_dt)
-
-    for trigger in to_delete:
+    for trigger in Trigger.objects.filter(date_processed__lt=expiration_dt):
         # Delete custom trigger information
         table = type_to_table.get(trigger.trigger_type, sentinel)
         if isinstance(table, tuple):
             for t in table:
                 if isinstance(t, tuple):
-                    cursor.execute('DELETE FROM %s WHERE {} = {}'.format(t[0], t[1], trigger.id))
+                    cursor.execute('DELETE FROM {} WHERE {} = {}'.format(t[0], t[1], trigger.id))
                 else:
-                    cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = {}'.format(t, trigger.id))
+                    cursor.execute('DELETE FROM {} WHERE trigger_ptr_id = {}'.format(t, trigger.id))
         elif table != sentinel:
-            cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = {}'.format(table, trigger.id))
+            cursor.execute('DELETE FROM {} WHERE trigger_ptr_id = {}'.format(table, trigger.id))
 
         # Delete the trigger from the main table
         trigger.delete()
