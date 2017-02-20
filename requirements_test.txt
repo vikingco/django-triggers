@@ -29,6 +29,10 @@ flake8-debugger==1.4.0
 -e git+ssh://git@github.com/vikingco/flake8-libfaketime.git@1.0#egg=flake8-libfaketime
 # Checks for module-level imports
 git+ssh://git@github.com/vikingco/flake8-module-import.git@1.0#egg=flake8-module-imports
+# Checks for usages of django.translation.activate()
+git+ssh://git@github.com/vikingco/flake8-translation-activate.git@1.0.1#egg=flake8-translation-activate
+# Checks for imports with an alias of _
+git+ssh://git@github.com/vikingco/flake8-ugettext-alias.git@1.0#egg=flake8-ugettext-alias
 
 # Coverage uploads
 coveralls
