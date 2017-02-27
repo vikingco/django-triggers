@@ -27,11 +27,11 @@ for req in requirements_test_file:
 
 
 setup(
-    name="django-triggers",
+    name='django-triggers',
     version=__version__,
     url='https://github.com/vikingco/django-triggers',
     license='BSD',
-    description="Framework to create and process triggers.",
+    description='Framework to create and process triggers.',
     long_description=open('README.md', 'r').read(),
     author='VikingCo NV/Medialaan',
     packages=find_packages('.'),

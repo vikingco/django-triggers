@@ -82,9 +82,10 @@ class Trigger(models.Model):
     def get_source(self):
         return tuple(x for x in self.source.split('$') if x != '')
 
-    def process(self, force=False, logger=None, dictionary={}):
+    def process(self, force=False, logger=None, dictionary=None):
         if logger:
             self.logger = get_logger(logger)
+        dictionary = {} if dictionary is None else dictionary
         now = timezone.now()
         if not force and self.date_processed is not None:
             raise AlreadyProcessedError()

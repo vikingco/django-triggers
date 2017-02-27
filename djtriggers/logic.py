@@ -114,8 +114,6 @@ def clean_triggers(expiration_dt=None, type_to_table=None):
      'complex_trigger': ('complex_trigger_table1', 'complex_trigger_table2'),
      'complexer_trigger': (('complexer_trigger_table1', 'complexer_trigger_id'), 'complexer_trigger_table2'),
     }
-
-    XXX: why do we need to pass this in? Should be available via the trigger IMHO.
     """
     if expiration_dt is None:
         expiration_dt = datetime.now() - relativedelta(months=2)

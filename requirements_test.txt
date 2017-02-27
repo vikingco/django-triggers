@@ -21,6 +21,17 @@ pep8-naming==0.3.3
 flake8-print==1.6.1
 # Checks for the use of debug statements (pdb, ...)
 flake8-debugger==1.4.0
+# Checks for things that should be comprehensions
+flake8-comprehensions==1.2.1
+# Checks for non-existent mock methods
+flake8-mock==0.3
+# Checks for mutable function arguments
+flake8-mutable==1.1.0
+# Checks for TODO statements (and similar)
+flake8-todo==0.7
+pycodestyle==2.3.1
+# Checks for uses of double quotes (without containing single quotes)
+flake8-quotes==0.9.0
 # Checks for the overriding of builtins
 -e git+ssh://git@github.com/vikingco/flake8-builtins.git@1.0#egg=flake8-builtins
 # Checks for uses of Django-style asserts
