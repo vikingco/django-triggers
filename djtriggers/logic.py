@@ -37,7 +37,7 @@ def process_triggers(use_statsd=False):
         from django_statsd.clients import statsd
 
     now = datetime.now()
-    logger.info('Processing all triggers from %s' % now)
+    logger.info('Processing all triggers from {}'.format(now))
 
     try:
         # Get all database models
@@ -63,9 +63,9 @@ def process_triggers(use_statsd=False):
 
                     # Send stats to statsd if necessary
                     if use_statsd:
-                        statsd.incr('triggers.%s.processed' % trigger.trigger_type)
+                        statsd.incr('triggers.{}.processed'.format(trigger.trigger_type))
                         if trigger.date_processed and trigger.process_after:
-                            statsd.timing('triggers.%s.process_delay_seconds' % trigger.trigger_type,
+                            statsd.timing('triggers.{}.process_delay_seconds'.format(trigger.trigger_type),
                                           (trigger.date_processed - trigger.process_after).total_seconds())
                 # The trigger didn't need processing yet
                 except ProcessLaterError:
@@ -82,7 +82,7 @@ def process_triggers(use_statsd=False):
                 else:
                     count_done += 1
 
-            logger.info('success: %s, error: %s, exception: %s' % (count_done, count_error, count_exception))
+            logger.info('success: {}, error: {}, exception: {}'.format(count_done, count_error, count_exception))
     finally:
         lock.release()
 
@@ -134,11 +134,11 @@ def clean_triggers(expiration_dt=None, type_to_table=None):
         if isinstance(table, tuple):
             for t in table:
                 if isinstance(t, tuple):
-                    cursor.execute('DELETE FROM %s WHERE %s = %s' % (t[0], t[1], trigger.id))
+                    cursor.execute('DELETE FROM %s WHERE {} = {}'.format(t[0], t[1], trigger.id))
                 else:
-                    cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = %s' % (t, trigger.id))
+                    cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = {}'.format(t, trigger.id))
         elif table != sentinel:
-            cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = %s' % (table, trigger.id))
+            cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = {}'.format(table, trigger.id))
 
         # Delete the trigger from the main table
         trigger.delete()
