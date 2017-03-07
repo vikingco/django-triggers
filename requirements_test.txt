@@ -49,6 +49,8 @@ git+ssh://git@github.com/vikingco/flake8-module-import.git@1.0#egg=flake8-module
 git+ssh://git@github.com/vikingco/flake8-translation-activate.git@1.0.1#egg=flake8-translation-activate
 # Checks for imports with an alias of _
 git+ssh://git@github.com/vikingco/flake8-ugettext-alias.git@1.0#egg=flake8-ugettext-alias
+# Checks for imports of the User model (instead of get_user_model() or settings.AUTH_USER_MODEL)
+git+ssh://git@github.com/vikingco/flake8-user-model.git@1.0#egg=flake8-user-model
 
 # Coverage uploads
 coveralls
