@@ -26,8 +26,8 @@ def process_triggers(use_statsd=False, function_logger=None):
     triggers being processed multiple times.
     """
     # Override logger with function_logger (celery wants a different logger)
-    if function_logger:
-        logger = function_logger
+    if not function_logger:
+        function_logger = logger
 
     # Take a lock to prevent multiple processing threads
     with NonBlockingLock.objects.acquire_lock(lock_name='djtriggers-process-triggers'):
@@ -36,7 +36,7 @@ def process_triggers(use_statsd=False, function_logger=None):
             from django_statsd.clients import statsd
 
         now = datetime.now()
-        logger.info('Processing all triggers from {}'.format(now))
+        function_logger.info('Processing all triggers from {}'.format(now))
 
         # Get all database models
         for trigger_model in apps.get_models():
@@ -51,7 +51,7 @@ def process_triggers(use_statsd=False, function_logger=None):
                                                     Q(process_after__lt=now),
                                                     date_processed__isnull=True)
 
-            logger.info('Start processing %d triggers of type %s', triggers.count(), trigger_model.typed)
+            function_logger.info('Start processing %d triggers of type %s', triggers.count(), trigger_model.typed)
             count_done, count_error, count_exception = 0, 0, 0
 
             # Process each trigger
@@ -75,12 +75,12 @@ def process_triggers(use_statsd=False, function_logger=None):
                 except Exception, e:
                     count_exception += 1
                     message = 'Processing of %s %s raised a %s'
-                    logger.exception(message, trigger_model.typed, trigger.pk, type(e).__name__)
+                    function_logger.exception(message, trigger_model.typed, trigger.pk, type(e).__name__)
                 # The trigger was successfully processed
                 else:
                     count_done += 1
 
-            logger.info('success: {}, error: {}, exception: {}'.format(count_done, count_error, count_exception))
+            function_logger.info('success: {}, error: {}, exception: {}'.format(count_done, count_error, count_exception))
 
 
 def clean_triggers(expiration_dt=None, type_to_table=None):
