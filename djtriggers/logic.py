@@ -4,7 +4,7 @@ from logging import getLogger
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+from locking.models import NonBlockingLock
 
 from django.db import connections
 from django.db.models import Q
@@ -18,28 +18,26 @@ from djtriggers.exceptions import ProcessError, ProcessLaterError
 logger = getLogger(__name__)
 
 
-def process_triggers(use_statsd=False):
+def process_triggers(use_statsd=False, function_logger=None):
     """
     Process all triggers that are ready for processing.
 
-    This function takes a FileLock when running, to prevent
+    This function takes a Database Lock when running, to prevent
     triggers being processed multiple times.
     """
+    # Override logger with function_logger (celery wants a different logger)
+    if function_logger:
+        logger = function_logger
+
     # Take a lock to prevent multiple processing threads
-    lock = FileLock('process_triggers')
-    try:
-        lock.acquire(-1)
-    except (AlreadyLocked, LockTimeout):
-        return
+    with NonBlockingLock.objects.acquire_lock(lock_name='djtriggers-process-triggers'):
+        # Get statsd if necessary
+        if use_statsd:
+            from django_statsd.clients import statsd
 
-    # Get statsd if necessary
-    if use_statsd:
-        from django_statsd.clients import statsd
+        now = datetime.now()
+        logger.info('Processing all triggers from {}'.format(now))
 
-    now = datetime.now()
-    logger.info('Processing all triggers from {}'.format(now))
-
-    try:
         # Get all database models
         for trigger_model in apps.get_models():
             # Check whether it's a trigger
@@ -83,8 +81,6 @@ def process_triggers(use_statsd=False):
                     count_done += 1
 
             logger.info('success: {}, error: {}, exception: {}'.format(count_done, count_error, count_exception))
-    finally:
-        lock.release()
 
 
 def clean_triggers(expiration_dt=None, type_to_table=None):
