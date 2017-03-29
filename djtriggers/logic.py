@@ -80,7 +80,8 @@ def process_triggers(use_statsd=False, function_logger=None):
                 else:
                     count_done += 1
 
-            function_logger.info('success: {}, error: {}, exception: {}'.format(count_done, count_error, count_exception))
+            function_logger.info('success: {}, error: {}, exception: {}'.format(count_done,
+                                                                                count_error, count_exception))
 
 
 def clean_triggers(expiration_dt=None, type_to_table=None):
