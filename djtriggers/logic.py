@@ -131,11 +131,11 @@ def clean_triggers(expiration_dt=None, type_to_table=None):
         if isinstance(table, tuple):
             for t in table:
                 if isinstance(t, tuple):
-                    cursor.execute('DELETE FROM %s WHERE {} = {}'.format(t[0], t[1], trigger.id))
+                    cursor.execute('DELETE FROM {} WHERE {} = {}'.format(t[0], t[1], trigger.id))
                 else:
-                    cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = {}'.format(t, trigger.id))
+                    cursor.execute('DELETE FROM {} WHERE trigger_ptr_id = {}'.format(t, trigger.id))
         elif table != sentinel:
-            cursor.execute('DELETE FROM %s WHERE trigger_ptr_id = {}'.format(table, trigger.id))
+            cursor.execute('DELETE FROM {} WHERE trigger_ptr_id = {}'.format(table, trigger.id))
 
         # Delete the trigger from the main table
         trigger.delete()
