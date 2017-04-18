@@ -1,7 +1,7 @@
 from celery import shared_task
 from celery.utils.log import get_task_logger
 
-from . import logic
+from django.apps import apps
 
 
 logger = get_task_logger(__name__)
@@ -9,9 +9,16 @@ logger = get_task_logger(__name__)
 
 @shared_task
 def process_triggers():
-    logic.process_triggers(use_statsd=True, function_logger=logger)
+    from .logic import process_triggers as process
+    process()
 
 
 @shared_task
 def clean_triggers():
-    logic.clean_triggers()
+    from .logic import clean_triggers as clean
+    clean()
+
+
+@shared_task
+def process_trigger(trigger_id, trigger_app_label, trigger_class, *args, **kwargs):
+    apps.get_model(trigger_app_label, trigger_class).objects.get(id=trigger_id).process(*args, **kwargs)
