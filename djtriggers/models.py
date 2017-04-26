@@ -9,7 +9,7 @@ from locking.exceptions import AlreadyLocked
 from locking.models import NonBlockingLock
 
 from .managers import TriggerManager
-from .exceptions import AlreadyProcessedError, ProcessLaterError
+from .exceptions import ProcessLaterError
 from .loggers import get_logger
 from .loggers.base import TriggerLogger
 
@@ -107,7 +107,8 @@ class Trigger(models.Model):
                     self.logger = get_logger(logger)
                 now = timezone.now()
                 if not force and self.date_processed is not None:
-                    raise AlreadyProcessedError()
+                    # trigger has already been processed. So everything is fine
+                    return
                 if not force and self.process_after and self.process_after >= now:
                     raise ProcessLaterError(self.process_after)
 
@@ -118,7 +119,6 @@ class Trigger(models.Model):
                 except ProcessLaterError as e:
                     self.process_after = e.process_after
                     self.save()
-                    raise
                 except Exception as e:
                     self._handle_execution_failure(e, use_statsd)
                     raise

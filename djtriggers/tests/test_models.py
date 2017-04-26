@@ -8,7 +8,7 @@ from django.test.testcases import TestCase
 from django.utils import timezone
 from locking.models import NonBlockingLock
 
-from djtriggers.exceptions import ProcessLaterError, AlreadyProcessedError
+from djtriggers.exceptions import ProcessLaterError
 from djtriggers.loggers.base import TriggerLogger
 from djtriggers.models import Trigger
 from djtriggers.tests.factories.triggers import DummyTriggerFactory
@@ -84,10 +84,12 @@ class TriggerTest(TestCase):
 
         mock_logger.assert_called_with(trigger, trigger._process({}))
 
-    def test_process_already_processed(self):
+    @patch.object(TriggerLogger, 'log_result')
+    def test_process_already_processed(self, mock_logger):
+        '''Reprocessing already processed triggers should just do nothing.'''
         trigger = DummyTriggerFactory(date_processed=timezone.now())
-        with raises(AlreadyProcessedError):
-            trigger.process()
+        assert trigger.date_processed is not None
+        assert not mock_logger.called
 
     def test_process_process_later(self):
         trigger = DummyTriggerFactory(process_after=timezone.now() + timedelta(minutes=1))
