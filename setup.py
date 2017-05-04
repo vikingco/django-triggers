@@ -33,7 +33,8 @@ setup(
     license='BSD',
     description='Framework to create and process triggers.',
     long_description=open('README.md', 'r').read(),
-    author='VikingCo NV/Medialaan',
+    author='Unleashed NV',
+    author_email='operations@unleashed.be',
     packages=find_packages('.'),
     include_package_data=True,
     zip_safe=False,  # Don't create egg files, Django cannot find templates in egg files.
