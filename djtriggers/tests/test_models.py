@@ -1,5 +1,5 @@
 from datetime import timedelta
-from logging import WARNING
+from logging import ERROR, WARNING
 
 from mock import patch
 from pytest import raises
@@ -66,6 +66,34 @@ class TriggerTest(TestCase):
                                                                              exception_type=type(exception).__name__,
                                                                              try_count=original_tries+1)
         mock_logger.assert_called_with(trigger, message, level=WARNING)
+
+    @override_settings(DJTRIGGERS_TRIES_BEFORE_WARNING=3)
+    @override_settings(DJTRIGGERS_TRIES_BEFORE_ERROR=5)
+    @patch.object(TriggerLogger, 'log_message')
+    def test_handle_execution_failure_tries_limit(self, mock_logger):
+        exception = Exception()
+        trigger = DummyTriggerFactory(number_of_tries=3)
+        original_tries = trigger.number_of_tries
+        trigger._handle_execution_failure(exception)
+
+        assert trigger.number_of_tries == original_tries + 1
+        message = ('Processing of {trigger_type} {trigger_key} '
+                   'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
+                                                                             trigger_key=trigger.pk,
+                                                                             exception_type=type(exception).__name__,
+                                                                             try_count=original_tries + 1)
+        mock_logger.assert_called_with(trigger, message, level=WARNING)
+
+        # do an extra retry
+        trigger._handle_execution_failure(exception)
+
+        assert trigger.number_of_tries == original_tries + 2
+        message = ('Processing of {trigger_type} {trigger_key} '
+                   'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
+                                                                             trigger_key=trigger.pk,
+                                                                             exception_type=type(exception).__name__,
+                                                                             try_count=original_tries + 2)
+        mock_logger.assert_called_with(trigger, message, level=ERROR)
 
     @patch('django_statsd.clients.statsd')
     def test_handle_execution_failure_use_statsd(self, mock_statsd):
