@@ -67,6 +67,7 @@ class Trigger(models.Model):
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
     number_of_tries = models.IntegerField(default=0)
+    successful = models.NullBooleanField(default=None)
 
     _logger_class = None
 
@@ -142,6 +143,7 @@ class Trigger(models.Model):
             if self.number_of_tries >= getattr(settings, 'DJTRIGGERS_TRIES_BEFORE_ERROR', 5):
                 # Set date_processed so it doesn't retry anymore
                 self.date_processed = timezone.now()
+                self.successful = False
                 level = ERROR
             else:
                 level = WARNING
@@ -176,6 +178,7 @@ class Trigger(models.Model):
                 statsd.timing('triggers.{trigger_type}.process_delay_seconds'.format(trigger_type=self.trigger_type),
                               (self.date_processed - self.process_after).total_seconds())
 
+        self.successful = True
         self.save()
 
     def __repr__(self):

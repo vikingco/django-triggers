@@ -20,6 +20,7 @@ class TriggerTest(TestCase):
         trigger._handle_execution_success()
 
         assert trigger.date_processed
+        assert trigger.successful is True
 
     @patch('django_statsd.clients.statsd')
     def test_handle_execution_success_use_statsd(self, mock_statsd):
@@ -27,6 +28,7 @@ class TriggerTest(TestCase):
         trigger._handle_execution_success(use_statsd=True)
 
         assert trigger.date_processed
+        assert trigger.successful is True
         mock_statsd.incr.assert_called_with(
             'triggers.{trigger_type}.processed'.format(trigger_type=trigger.trigger_type))
         mock_statsd.timing.assert_called_with(
@@ -77,6 +79,7 @@ class TriggerTest(TestCase):
         trigger._handle_execution_failure(exception)
 
         assert trigger.number_of_tries == original_tries + 1
+        assert trigger.successful is None
         message = ('Processing of {trigger_type} {trigger_key} '
                    'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
                                                                              trigger_key=trigger.pk,
@@ -88,6 +91,7 @@ class TriggerTest(TestCase):
         trigger._handle_execution_failure(exception)
 
         assert trigger.number_of_tries == original_tries + 2
+        assert trigger.successful is False
         message = ('Processing of {trigger_type} {trigger_key} '
                    'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
                                                                              trigger_key=trigger.pk,
@@ -103,6 +107,7 @@ class TriggerTest(TestCase):
         trigger._handle_execution_failure(exception, use_statsd=True)
 
         assert trigger.number_of_tries == original_tries + 1
+        assert trigger.successful is None
         mock_statsd.incr.assert_called_with('triggers.{trigger_type}.failed'.format(trigger_type=trigger.trigger_type))
 
     @patch.object(TriggerLogger, 'log_result')
