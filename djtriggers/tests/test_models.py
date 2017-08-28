@@ -71,33 +71,61 @@ class TriggerTest(TestCase):
 
     @override_settings(DJTRIGGERS_TRIES_BEFORE_WARNING=3)
     @override_settings(DJTRIGGERS_TRIES_BEFORE_ERROR=5)
-    @patch.object(TriggerLogger, 'log_message')
-    def test_handle_execution_failure_tries_limit(self, mock_logger):
+    def test_handle_execution_failure_tries_limit(self):
+        """
+        When trigger reaches retries limit and ERROR is raised check message level and trigger successful state.
+        """
         exception = Exception()
+        exception_name = type(exception).__name__
         trigger = DummyTriggerFactory(number_of_tries=3)
         original_tries = trigger.number_of_tries
-        trigger._handle_execution_failure(exception)
 
-        assert trigger.number_of_tries == original_tries + 1
-        assert trigger.successful is None
-        message = ('Processing of {trigger_type} {trigger_key} '
-                   'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
-                                                                             trigger_key=trigger.pk,
-                                                                             exception_type=type(exception).__name__,
-                                                                             try_count=original_tries + 1)
-        mock_logger.assert_called_with(trigger, message, level=WARNING)
+        with patch.object(TriggerLogger, 'log_message') as mock_logger:
+            trigger._handle_execution_failure(exception)
+            exceeded_retries = original_tries + 1
+            assert trigger.number_of_tries == exceeded_retries
+            assert trigger.successful is None
+            message = ('Processing of {trigger_type} {trigger_key} '
+                       'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
+                                                                                 trigger_key=trigger.pk,
+                                                                                 exception_type=exception_name,
+                                                                                 try_count=exceeded_retries)
+            mock_logger.assert_called_once_with(trigger, message, level=WARNING)
 
         # do an extra retry
-        trigger._handle_execution_failure(exception)
+        with patch.object(TriggerLogger, 'log_message') as mock_logger:
+            trigger._handle_execution_failure(exception)
+            exceeded_retries = original_tries + 2
+            assert trigger.number_of_tries == exceeded_retries
+            assert trigger.successful is False
+            message = ('Processing of {trigger_type} {trigger_key} '
+                       'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
+                                                                                 trigger_key=trigger.pk,
+                                                                                 exception_type=exception_name,
+                                                                                 try_count=exceeded_retries)
+            mock_logger.assert_called_once_with(trigger, message, level=ERROR)
 
-        assert trigger.number_of_tries == original_tries + 2
-        assert trigger.successful is False
-        message = ('Processing of {trigger_type} {trigger_key} '
-                   'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
-                                                                             trigger_key=trigger.pk,
-                                                                             exception_type=type(exception).__name__,
-                                                                             try_count=original_tries + 2)
-        mock_logger.assert_called_with(trigger, message, level=ERROR)
+    def test_handle_execution_failure_above_tries_limit(self):
+        """
+        Check if ERROR is still raised for a trigger above retry limit
+        """
+        exception = Exception()
+        exception_name = type(exception).__name__
+        trigger = DummyTriggerFactory(number_of_tries=5)
+        original_tries = trigger.number_of_tries
+        exceeded_retries = original_tries + 1
+
+        with self.settings(DJTRIGGERS_TRIES_BEFORE_WARNING=3) and self.settings(DJTRIGGERS_TRIES_BEFORE_ERROR=5) and \
+                patch.object(TriggerLogger, 'log_message') as mock_logger:
+            trigger._handle_execution_failure(exception)
+            assert trigger.number_of_tries == exceeded_retries
+            assert trigger.successful is False
+            message = ('Processing of {trigger_type} {trigger_key} '
+                       'raised a {exception_type} (try nr. {try_count})').format(trigger_type=trigger.trigger_type,
+                                                                                 trigger_key=trigger.pk,
+                                                                                 exception_type=exception_name,
+                                                                                 try_count=exceeded_retries)
+            mock_logger.assert_called_once_with(trigger, message, level=ERROR)
 
     @patch('django_statsd.clients.statsd')
     def test_handle_execution_failure_use_statsd(self, mock_statsd):
