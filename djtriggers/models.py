@@ -1,4 +1,4 @@
-from logging import WARNING
+from logging import ERROR, WARNING
 
 from django.conf import settings
 from django.db import models
@@ -67,6 +67,7 @@ class Trigger(models.Model):
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
     number_of_tries = models.IntegerField(default=0)
+    successful = models.NullBooleanField(default=None)
 
     _logger_class = None
 
@@ -136,11 +137,21 @@ class Trigger(models.Model):
         :return: None
         """
         self.number_of_tries += 1
+        # Log message if starts retrying too much
         if self.number_of_tries > getattr(settings, 'DJTRIGGERS_TRIES_BEFORE_WARNING', 3):
+            # Set a limit for retries
+            if self.number_of_tries >= getattr(settings, 'DJTRIGGERS_TRIES_BEFORE_ERROR', 5):
+                # Set date_processed so it doesn't retry anymore
+                self.date_processed = timezone.now()
+                self.successful = False
+                level = ERROR
+            else:
+                level = WARNING
+
             message = 'Processing of {trigger_type} {trigger_key} raised a {exception_type} (try nr. {try_count})'.\
                 format(trigger_type=self.trigger_type, trigger_key=self.pk, exception_type=type(exception).__name__,
                        try_count=self.number_of_tries)
-            self.logger.log_message(self, message, level=WARNING)
+            self.logger.log_message(self, message, level=level)
 
         # Send stats to statsd if necessary
         if use_statsd:
@@ -167,6 +178,7 @@ class Trigger(models.Model):
                 statsd.timing('triggers.{trigger_type}.process_delay_seconds'.format(trigger_type=self.trigger_type),
                               (self.date_processed - self.process_after).total_seconds())
 
+        self.successful = True
         self.save()
 
     def __repr__(self):
