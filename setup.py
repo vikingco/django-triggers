@@ -12,14 +12,14 @@ tests_require = []
 dependency_links = []
 
 # Inject test requirements from requirements_test.txt into setup.py
-requirements_file = parse_requirements(path.join('requirements.txt'), session=PipSession())
+requirements_file = parse_requirements(path.join('requirements', 'requirements.txt'), session=PipSession())
 for req in requirements_file:
     install_requires.append(str(req.req))
     if req.link:
         dependency_links.append(str(req.link))
 
 # Inject test requirements from requirements_test.txt into setup.py
-requirements_test_file = parse_requirements(path.join('requirements_test.txt'), session=PipSession())
+requirements_test_file = parse_requirements(path.join('requirements', 'requirements_test.txt'), session=PipSession())
 for req in requirements_test_file:
     tests_require.append(str(req.req))
     if req.link:

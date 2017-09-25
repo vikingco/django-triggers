@@ -1,4 +1,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/vikingco/django-triggers/badge.svg)](https://coveralls.io/github/vikingco/django-triggers)
+[![CI Status](https://travis-ci.org/vikingco/django-triggers.svg?branch=master)](https://travis-ci.org/vikingco/django-triggers)
+
 About
 -----
 

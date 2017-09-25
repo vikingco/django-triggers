@@ -59,6 +59,9 @@ local.properties
 # CDT-specific
 .cproject
 
+# virtualenv
+.venv/
+
 #########
 # PyCharm
 #########

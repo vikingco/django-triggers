@@ -1,0 +1,4 @@
+Django>=1.8,<1.12
+celery>=4.0.0
+python-dateutil
+django-db-locking>=2.0.2
