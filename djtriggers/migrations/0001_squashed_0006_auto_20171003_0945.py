@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('trigger_type', models.CharField(db_index=True, max_length=50)),
-                ('source', models.CharField(blank=True, max_length=250, null=True)),
+                ('source', models.CharField(blank=True, max_length=150, null=True)),
                 ('date_received', models.DateTimeField()),
                 ('date_processed', models.DateTimeField(blank=True, db_index=True, null=True)),
                 ('process_after', models.DateTimeField(blank=True, db_index=True, null=True)),
