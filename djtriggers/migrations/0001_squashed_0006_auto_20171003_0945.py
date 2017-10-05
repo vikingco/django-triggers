@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='trigger',
             name='source',
-            field=models.CharField(blank=True, db_index=True, max_length=250, null=True),
+            field=models.CharField(blank=True, db_index=True, max_length=150, null=True),
         ),
         migrations.AddField(
             model_name='trigger',
