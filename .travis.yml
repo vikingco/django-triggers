@@ -8,6 +8,10 @@ env:
 python:
    - "2.7"
    - "3.6"
+matrix:
+  exclude:
+  - python: "2.7"
+    env: DJANGO='>=2.0,<2.1'
 install:
    - pip install "Django${DJANGO}"
    - pip install -e .
