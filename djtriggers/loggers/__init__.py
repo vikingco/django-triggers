@@ -1,5 +1,9 @@
 from django.conf import settings
-from django.core.urlresolvers import get_mod_func
+try:
+    from django.urls import get_mod_func
+except ImportError:
+    # For Django <2.0
+    from django.core.urlresolvers import get_mod_func
 
 REGISTRY = {}
 
