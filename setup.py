@@ -1,9 +1,8 @@
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
-from pip.download import PipSession
-
 from os import path
 from djtriggers import __version__
+from pip._internal.req.req_file import parse_requirements
+from pip._internal.download import PipSession
 
 
 # Lists of requirements and dependency links which are needed during runtime, testing and setup
