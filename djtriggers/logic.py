@@ -60,6 +60,9 @@ def process_triggers(use_statsd=False, function_logger=None):
             # The trigger raised an (expected) error while processing
             except ProcessError:
                 pass
+            # In case a trigger got removed (manually or some process), deal with it
+            except Trigger.DoesNotExist as e:
+                logger.info(e)
 
 
 def clean_triggers(expiration_dt=None, type_to_table=None):
