@@ -1,6 +1,6 @@
 SECRET_KEY = 'fake-key'
 
-DJTRIGGERS_REDIS_URL = 'redis://localhost:6379/0'
+DJTRIGGERS_REDIS_URL = ''
 
 INSTALLED_APPS = [
     'djtriggers',
