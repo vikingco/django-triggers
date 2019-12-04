@@ -1,12 +1,12 @@
 from logging import ERROR, WARNING
+from redis import Redis
+from redis.exceptions import LockError
+from redis.lock import Lock
 
 from django.conf import settings
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import timezone
-
-from locking.exceptions import AlreadyLocked
-from locking.models import NonBlockingLock
 
 from .managers import TriggerManager
 from .exceptions import ProcessLaterError
@@ -103,7 +103,8 @@ class Trigger(models.Model):
         # The lock assures no two tasks can process a trigger simultaneously.
         # The check for date_processed assures a trigger is not executed multiple times.
         try:
-            with NonBlockingLock.objects.acquire_lock(self):
+            with Lock(redis=Redis.from_url(settings.DJTRIGGERS_REDIS_URL), name='djtriggers-' + str(self.id),
+                      blocking_timeout=0):
                 if logger:
                     self.logger = get_logger(logger)
                 now = timezone.now()
@@ -123,7 +124,7 @@ class Trigger(models.Model):
                 except Exception as e:
                     self._handle_execution_failure(e, use_statsd)
                     raise
-        except AlreadyLocked:
+        except LockError:
             pass
 
     def _process(self, dictionary):

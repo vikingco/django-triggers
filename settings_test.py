@@ -1,8 +1,9 @@
 SECRET_KEY = 'fake-key'
 
+DJTRIGGERS_REDIS_URL = 'redis://localhost:6379/0'
+
 INSTALLED_APPS = [
     'djtriggers',
-    'locking'
 ]
 
 DATABASES = {
