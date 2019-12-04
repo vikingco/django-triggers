@@ -17,6 +17,19 @@ common data structures and logic for all child triggers. The only thing a
 child should have to do is override the `_process` method and set `typed` to
 a unique slug.
 
+Settings
+--------
+
+The following settings are used:
+- `DJTRIGGERS_TRIES_BEFORE_WARNING`: the number of times a task can be retried before a warning is logged. Defaults to 3.
+- `DJTRIGGERS_TRIES_BEFORE_ERROR`: the number of times a task can be retried before an error is raised. Defaults to 5.
+- `DJTRIGGERS_ASYNC_HANDLING`: whether processing should be asynchronous (using Celery) or not. Default to False.
+- `DJTRIGGERS_CELERY_TASK_MAX_RETRIES`: the number of times the Celery task for a trigger should be retried. Defaults to 0.
+- `DJTRIGGERS_TYPE_TO_TABLE`: mapping of trigger types to database tables. Used for the cleanup script. Defaults to `{}`.
+- `DJTRIGGERS_REDIS_URL`: the URL of the Redis instance used for locks.
+- `DJTRIGGERS_LOGGERS`: separate logging config for django-triggers. Defaults to `()`.
+
+
 Examples
 --------
 

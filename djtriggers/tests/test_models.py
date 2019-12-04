@@ -1,12 +1,12 @@
 from datetime import timedelta
 from logging import ERROR, WARNING
+from redis.exceptions import LockError
 
 from mock import patch
 from pytest import raises
 from django.test import override_settings
 from django.test.testcases import TestCase
 from django.utils import timezone
-from locking.models import NonBlockingLock
 
 from djtriggers.exceptions import ProcessLaterError
 from djtriggers.loggers.base import TriggerLogger
@@ -141,7 +141,8 @@ class TriggerTest(TestCase):
     @patch.object(TriggerLogger, 'log_result')
     def test_process(self, mock_logger):
         trigger = DummyTriggerFactory()
-        trigger.process()
+        with patch('djtriggers.models.Lock'):
+            trigger.process()
 
         mock_logger.assert_called_with(trigger, trigger._process({}))
 
@@ -154,20 +155,21 @@ class TriggerTest(TestCase):
 
     def test_process_process_later(self):
         trigger = DummyTriggerFactory(process_after=timezone.now() + timedelta(minutes=1))
-        with raises(ProcessLaterError):
+        with raises(ProcessLaterError), patch('djtriggers.models.Lock'):
             trigger.process()
 
     @patch.object(Trigger, '_handle_execution_failure')
     def test_process_exception_during_execution(self, mock_fail):
         trigger = DummyTriggerFactory()
-        with patch.object(trigger, '_process', side_effect=Exception), raises(Exception):
+        with patch.object(trigger, '_process', side_effect=Exception), raises(Exception), \
+                patch('djtriggers.models.Lock'):
             trigger.process()
         assert mock_fail.called
 
     @patch.object(TriggerLogger, 'log_result')
     def test_process_locked(self, mock_logger):
         trigger = DummyTriggerFactory()
-        with NonBlockingLock.objects.acquire_lock(trigger):
+        with patch('djtriggers.models.Lock', side_effect=LockError):
             trigger.process()
 
         assert not mock_logger.called

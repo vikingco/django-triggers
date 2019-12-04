@@ -15,13 +15,15 @@ class SynchronousExecutionTest(TestCase):
 
     def test_process_after_now(self):
         trigger = DummyTriggerFactory()
-        process_triggers()
+        with patch('djtriggers.models.Lock'):
+            process_triggers()
         trigger.refresh_from_db()
         assert trigger.date_processed is not None
 
     def test_process_after_yesterday(self):
         trigger = DummyTriggerFactory(process_after=self.now - timedelta(days=1))
-        process_triggers()
+        with patch('djtriggers.models.Lock'):
+            process_triggers()
         trigger.refresh_from_db()
         assert trigger.date_processed is not None
 
