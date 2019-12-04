@@ -141,8 +141,7 @@ class TriggerTest(TestCase):
     @patch.object(TriggerLogger, 'log_result')
     def test_process(self, mock_logger):
         trigger = DummyTriggerFactory()
-        with patch('djtriggers.models.Lock'):
-            trigger.process()
+        trigger.process()
 
         mock_logger.assert_called_with(trigger, trigger._process({}))
 
@@ -155,21 +154,20 @@ class TriggerTest(TestCase):
 
     def test_process_process_later(self):
         trigger = DummyTriggerFactory(process_after=timezone.now() + timedelta(minutes=1))
-        with raises(ProcessLaterError), patch('djtriggers.models.Lock'):
+        with raises(ProcessLaterError):
             trigger.process()
 
     @patch.object(Trigger, '_handle_execution_failure')
     def test_process_exception_during_execution(self, mock_fail):
         trigger = DummyTriggerFactory()
-        with patch.object(trigger, '_process', side_effect=Exception), raises(Exception), \
-                patch('djtriggers.models.Lock'):
+        with patch.object(trigger, '_process', side_effect=Exception), raises(Exception):
             trigger.process()
         assert mock_fail.called
 
     @patch.object(TriggerLogger, 'log_result')
     def test_process_locked(self, mock_logger):
         trigger = DummyTriggerFactory()
-        with patch('djtriggers.models.Lock', side_effect=LockError):
+        with patch('djtriggers.models.redis_lock', side_effect=LockError):
             trigger.process()
 
         assert not mock_logger.called

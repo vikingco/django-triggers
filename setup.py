@@ -32,6 +32,7 @@ setup(
     license='BSD',
     description='Framework to create and process triggers.',
     long_description=open('README.md', 'r').read(),
+    long_description_content_type='text/markdown',
     author='Unleashed NV',
     author_email='operations@unleashed.be',
     packages=find_packages('.'),
