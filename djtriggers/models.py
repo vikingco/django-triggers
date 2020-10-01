@@ -66,7 +66,7 @@ class Trigger(models.Model):
     date_processed = models.DateTimeField(null=True, blank=True, db_index=True)
     process_after = models.DateTimeField(null=True, blank=True, db_index=True)
     number_of_tries = models.IntegerField(default=0)
-    successful = models.NullBooleanField(default=None)
+    successful = models.BooleanField(default=None, null=True)
 
     _logger_class = None
 
