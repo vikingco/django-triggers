@@ -1,9 +1,9 @@
 language: python
 dist: xenial
 env:
-   DJANGO='>=2.2,<2.3
+   DJANGO='>=2.2
 python:
-   - "3.6"
+   - "3.8"
 install:
    - pip install --upgrade pip
    - pip install "Django${DJANGO}"

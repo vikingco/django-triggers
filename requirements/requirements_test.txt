@@ -4,12 +4,12 @@ mock==1.0.1
 # Factories
 factory_boy==2.9.1
 django-factory_boy==1.0.0
-fake-factory==0.5.7
+Faker==4.4.0
 
 # pytest
-py==1.5.2
-pytest==4.3.0
-pytest-django==3.4.5
+py==1.9.0
+pytest==6.1.1
+pytest-django==3.10.0
 
 # test coverage
 pytest-cov==2.5.1
@@ -24,7 +24,7 @@ flake8==3.3.0
 pycodestyle==2.3.1
 enum34==1.1.6
 configparser==3.5.0
-pyflakes==1.5.0
+pyflakes==2.1.1
 pep8==1.7.0
 # Checks for cyclomatic complexity
 mccabe==0.6.1
