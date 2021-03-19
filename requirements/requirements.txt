@@ -1,4 +1,4 @@
 Django>=2.1.5
-celery>=4.0.0
+celery>=5.0.0
 python-dateutil
 redis>=3.0.0
