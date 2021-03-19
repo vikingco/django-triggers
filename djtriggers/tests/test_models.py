@@ -147,7 +147,7 @@ class TriggerTest(TestCase):
 
     @patch.object(TriggerLogger, 'log_result')
     def test_process_already_processed(self, mock_logger):
-        '''Reprocessing already processed triggers should just do nothing.'''
+        """Reprocessing already processed triggers should just do nothing."""
         trigger = DummyTriggerFactory(date_processed=timezone.now())
         assert trigger.date_processed is not None
         assert not mock_logger.called
