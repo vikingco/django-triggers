@@ -7,7 +7,7 @@ django-factory_boy==1.0.0
 Faker==4.4.0
 
 # pytest
-py==1.9.0
+py==1.10.0
 pytest==6.1.1
 pytest-django==3.10.0
 
