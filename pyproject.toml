@@ -1,0 +1,7 @@
+[project]
+name = "django-triggers"
+version = "2.1.5"
+
+[build-system]
+requires = ["pip", "setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
