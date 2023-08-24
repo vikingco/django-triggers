@@ -8,10 +8,10 @@ from django.test import override_settings
 from django.test.testcases import TestCase
 from django.utils import timezone
 
-from djtriggers.exceptions import ProcessLaterError
-from djtriggers.loggers.base import TriggerLogger
-from djtriggers.models import Trigger
-from djtriggers.tests.factories.triggers import DummyTriggerFactory
+from django-triggers.exceptions import ProcessLaterError
+from django-triggers.loggers.base import TriggerLogger
+from django-triggers.models import Trigger
+from django-triggers.tests.factories.triggers import DummyTriggerFactory
 
 
 class TriggerTest(TestCase):
@@ -167,7 +167,7 @@ class TriggerTest(TestCase):
     @patch.object(TriggerLogger, 'log_result')
     def test_process_locked(self, mock_logger):
         trigger = DummyTriggerFactory()
-        with patch('djtriggers.models.redis_lock', side_effect=LockError):
+        with patch('django-triggers.models.redis_lock', side_effect=LockError):
             trigger.process()
 
         assert not mock_logger.called

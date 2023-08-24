@@ -1,14 +1,14 @@
-SECRET_KEY = 'fake-key'
+SECRET_KEY = "fake-key"
 
-DJTRIGGERS_REDIS_URL = ''
+DJTRIGGERS_REDIS_URL = ""
 
 INSTALLED_APPS = [
-    'djtriggers',
+    "django-triggers",
 ]
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "db.sqlite3",
     }
 }

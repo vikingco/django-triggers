@@ -1,11 +1,11 @@
 from logging import log, info
 
-from djtriggers.loggers.base import TriggerLogger
+from django-triggers.loggers.base import TriggerLogger
 
 
 class DatabaseLogger(TriggerLogger):
     def log_result(self, trigger, message, level=None):
-        from djtriggers.models import TriggerResult
+        from django-triggers.models import TriggerResult
         TriggerResult.objects.create(trigger=trigger, result=message)
 
     def log_message(self, trigger, message, level=None):
@@ -27,5 +27,5 @@ class DatabaseSerializeLogger(DatabaseLogger):
         if results is None:
             return
 
-        from djtriggers.models import TriggerResult
+        from django-triggers.models import TriggerResult
         TriggerResult.objects.create(trigger=trigger, result=_prettify(results))

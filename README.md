@@ -38,7 +38,7 @@ General use
 
 ```python
 
-from djtriggers.models import Trigger
+from django-triggers.models import Trigger
 
 class BreakfastTrigger(Trigger):
     class Meta:
@@ -59,7 +59,7 @@ Trigger specific data
 
 ```python
 
-from djtriggers.models import Trigger
+from django-triggers.models import Trigger
 
 class PayBill(Trigger):
     class Meta:

@@ -12,7 +12,7 @@ omit =
     manage*
 
     # Ignore admin files
-    djtriggers/*/admin.py
+    django-triggers/*/admin.py
 [report]
 exclude_lines=
     pragma: no cover

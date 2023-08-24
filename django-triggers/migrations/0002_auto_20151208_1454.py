@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
 import datetime
+
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('djtriggers', '0001_initial'),
+        ("django-triggers", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='trigger',
-            name='date_received',
+            model_name="trigger",
+            name="date_received",
             field=models.DateTimeField(default=datetime.datetime.now),
             preserve_default=True,
         ),

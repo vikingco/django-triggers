@@ -1,4 +1,4 @@
-from djtriggers.loggers.base import TriggerLogger
+from django-triggers.loggers.base import TriggerLogger
 
 from logging import log, info
 

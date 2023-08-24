@@ -2,7 +2,7 @@ from logging import getLogger
 
 from django.core.management.base import NoArgsCommand
 
-from djtriggers.logic import clean_triggers
+from django-triggers.logic import clean_triggers
 
 
 logger = getLogger(__name__)

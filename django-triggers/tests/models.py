@@ -1,4 +1,4 @@
-from djtriggers.models import Trigger
+from django-triggers.models import Trigger
 
 
 class DummyTrigger(Trigger):

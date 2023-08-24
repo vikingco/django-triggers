@@ -10,8 +10,8 @@ install:
    - pip install -e .
    - pip install -r requirements/requirements_test.txt
 before_script:
-    flake8 djtriggers/
+    flake8 django-triggers/
 script:
-    pytest -v --capture=sys --cov=djtriggers/ djtriggers/ --cov-report term-missing:skip-covered
+    pytest -v --capture=sys --cov=django-triggers/ django-triggers/ --cov-report term-missing:skip-covered
 after_success:
     coveralls

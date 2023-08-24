@@ -1,16 +1,16 @@
 from logging import ERROR, WARNING
-from redis.exceptions import LockError
 
 from django.conf import settings
 from django.db import models
 from django.db.models.base import ModelBase
 from django.utils import timezone
+from redis.exceptions import LockError
 
-from .managers import TriggerManager
 from .exceptions import ProcessLaterError
 from .locking import redis_lock
 from .loggers import get_logger
 from .loggers.base import TriggerLogger
+from .managers import TriggerManager
 
 
 class TriggerBase(ModelBase):
@@ -18,11 +18,12 @@ class TriggerBase(ModelBase):
     A meta class for all Triggers. Adds a default manager that filters
     on type.
     """
+
     def __new__(cls, name, bases, attrs):
         super_new = super(TriggerBase, cls).__new__
-        typed = attrs.pop('typed', None)
+        typed = attrs.pop("typed", None)
         if typed is not None:
-            attrs['objects'] = TriggerManager(typed)
+            attrs["objects"] = TriggerManager(typed)
         new_class = super_new(cls, name, bases, attrs)
         if typed is None:
             return new_class
@@ -55,6 +56,7 @@ class Trigger(models.Model):
     __init__, that logger will be used, otherwise the class' _logger_class
     determines the logger (if any). Default is no logging.
     """
+
     __metaclass__ = TriggerBase
 
     # Set typed in a subclass to make it a typed trigger.
@@ -72,7 +74,7 @@ class Trigger(models.Model):
 
     def __init__(self, *args, **kwargs):
         super(Trigger, self).__init__(*args, **kwargs)
-        if hasattr(self, 'typed'):
+        if hasattr(self, "typed"):
             self.trigger_type = self.typed
 
         if self._logger_class:
@@ -82,10 +84,10 @@ class Trigger(models.Model):
 
     def set_source(self, *args):
         args = [str(arg) for arg in args]
-        self.source = '$'.join(args)
+        self.source = "$".join(args)
 
     def get_source(self):
-        return tuple(x for x in self.source.split('$') if x != '')
+        return tuple(x for x in self.source.split("$") if x != "")
 
     def process(self, force=False, logger=None, dictionary=None, use_statsd=False):
         """
@@ -102,7 +104,7 @@ class Trigger(models.Model):
         # The lock assures no two tasks can process a trigger simultaneously.
         # The check for date_processed assures a trigger is not executed multiple times.
         try:
-            with redis_lock('djtriggers-' + str(self.id), blocking_timeout=0):
+            with redis_lock("django-triggers-" + str(self.id), blocking_timeout=0):
                 if logger:
                     self.logger = get_logger(logger)
                 now = timezone.now()
@@ -137,9 +139,13 @@ class Trigger(models.Model):
         """
         self.number_of_tries += 1
         # Log message if starts retrying too much
-        if self.number_of_tries > getattr(settings, 'DJTRIGGERS_TRIES_BEFORE_WARNING', 3):
+        if self.number_of_tries > getattr(
+            settings, "DJTRIGGERS_TRIES_BEFORE_WARNING", 3
+        ):
             # Set a limit for retries
-            if self.number_of_tries >= getattr(settings, 'DJTRIGGERS_TRIES_BEFORE_ERROR', 5):
+            if self.number_of_tries >= getattr(
+                settings, "DJTRIGGERS_TRIES_BEFORE_ERROR", 5
+            ):
                 # Set date_processed so it doesn't retry anymore
                 self.date_processed = timezone.now()
                 self.successful = False
@@ -147,15 +153,21 @@ class Trigger(models.Model):
             else:
                 level = WARNING
 
-            message = 'Processing of {trigger_type} {trigger_key} raised a {exception_type} (try nr. {try_count})'.\
-                format(trigger_type=self.trigger_type, trigger_key=self.pk, exception_type=type(exception).__name__,
-                       try_count=self.number_of_tries)
+            message = "Processing of {trigger_type} {trigger_key} raised a {exception_type} (try nr. {try_count})".format(
+                trigger_type=self.trigger_type,
+                trigger_key=self.pk,
+                exception_type=type(exception).__name__,
+                try_count=self.number_of_tries,
+            )
             self.logger.log_message(self, message, level=level)
 
         # Send stats to statsd if necessary
         if use_statsd:
             from django_statsd.clients import statsd
-            statsd.incr('triggers.{trigger_type}.failed'.format(trigger_type=self.trigger_type))
+
+            statsd.incr(
+                "triggers.{trigger_type}.failed".format(trigger_type=self.trigger_type)
+            )
 
         self.save()
 
@@ -172,17 +184,29 @@ class Trigger(models.Model):
         # Send stats to statsd if necessary
         if use_statsd:
             from django_statsd.clients import statsd
-            statsd.incr('triggers.{trigger_type}.processed'.format(trigger_type=self.trigger_type))
+
+            statsd.incr(
+                "triggers.{trigger_type}.processed".format(
+                    trigger_type=self.trigger_type
+                )
+            )
             if self.date_processed and self.process_after:
-                statsd.timing('triggers.{trigger_type}.process_delay_seconds'.format(trigger_type=self.trigger_type),
-                              (self.date_processed - self.process_after).total_seconds())
+                statsd.timing(
+                    "triggers.{trigger_type}.process_delay_seconds".format(
+                        trigger_type=self.trigger_type
+                    ),
+                    (self.date_processed - self.process_after).total_seconds(),
+                )
 
         self.successful = True
         self.save()
 
     def __repr__(self):
-        return 'Trigger {trigger_id} of type {trigger_type} ({is_processed}processed)'.format(
-            trigger_id=self.id, trigger_type=self.trigger_type, is_processed='' if self.date_processed else 'not ')
+        return "Trigger {trigger_id} of type {trigger_type} ({is_processed}processed)".format(
+            trigger_id=self.id,
+            trigger_type=self.trigger_type,
+            is_processed="" if self.date_processed else "not ",
+        )
 
 
 class TriggerResult(models.Model):

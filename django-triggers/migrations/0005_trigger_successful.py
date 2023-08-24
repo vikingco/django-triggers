@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('djtriggers', '0004_auto_20170216_1007'),
+        ("django-triggers", "0004_auto_20170216_1007"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trigger',
-            name='successful',
+            model_name="trigger",
+            name="successful",
             field=models.NullBooleanField(default=None),
         ),
     ]

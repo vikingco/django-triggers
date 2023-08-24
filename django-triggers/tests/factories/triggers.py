@@ -1,7 +1,7 @@
 from django.utils import timezone
 from factory import DjangoModelFactory
 
-from djtriggers.tests.models import DummyTrigger
+from django-triggers.tests.models import DummyTrigger
 
 
 class DummyTriggerFactory(DjangoModelFactory):

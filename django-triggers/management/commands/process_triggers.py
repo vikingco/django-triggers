@@ -2,7 +2,7 @@ from django.core.management.base import NoArgsCommand
 
 from optparse import make_option
 
-from djtriggers import logic
+from django-triggers import logic
 
 
 class Command(NoArgsCommand):

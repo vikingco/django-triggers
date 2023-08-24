@@ -6,15 +6,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('djtriggers', '0005_trigger_successful'),
+        ("django-triggers", "0006_auto_20171003_0945"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='trigger',
-            name='source',
-            field=models.CharField(blank=True, db_index=True, max_length=150, null=True),
+            model_name="trigger",
+            name="successful",
+            field=models.BooleanField(default=None, null=True),
         ),
     ]
