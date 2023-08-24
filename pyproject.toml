@@ -1,0 +1,36 @@
+[project]
+name = "django-triggers"
+version = "2.2.0"
+description = "Framework to create and process triggers."
+authors = [
+    { name = "Unleashed NV", email = "operations@unleashed.be" },
+]
+readme = "README.md"
+classifiers=[
+    'Intended Audience :: Developers',
+    'Programming Language :: Python',
+    'Operating System :: OS Independent',
+    'Environment :: Web Environment',
+    'Framework :: Django',
+]
+dependencies = [
+    "Django>=2.1.5",
+    "celery>=5.0.0",
+    "python-dateutil",
+    "redis>=3.0.0",
+]
+
+[project.urls]
+Repository = "https://github.com/vikingco/django-triggers"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["djtriggers*"]
+exclude = ["djtriggers.tests*"]
+namespaces = false
+
+[build-system]
+requires = ["pip", "setuptools"]
+build-backend = "setuptools.build_meta"
